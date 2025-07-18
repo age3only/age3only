@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ESP32 Timer Dashboard</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 2em; background: #f4f4f4; }
+    table { width: 100%; max-width: 600px; margin: auto; border-collapse: collapse; }
+    td, th { padding: 8px; border: 1px solid #ccc; text-align: center; }
+    input { width: 80px; padding: 4px; text-align: center; }
+    button { padding: 6px 12px; }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center;">ESP32 Timer Scheduler</h2>
+  <table>
+    <thead>
+      <tr><th>Timer</th><th>Start Time</th><th>Duration (min)</th><th>Save</th></tr>
+    </thead>
+    <tbody id="timerTable"></tbody>
+  </table>
+
+  <script>
+    // Firebase Config - Replace with your project config
+    const firebaseConfig = {
+      apiKey: "AIzaSyB_05i0ieqMr0p-SuKRrSzZxy28MfCaLAs",
+      authDomain: "remote-esp-study.firebaseapp.com",
+      databaseURL: "https://remote-esp-study-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "remote-esp-study",
+      storageBucket: "remote-esp-study.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const table = document.getElementById("timerTable");
+
+    function createRow(timerNum, start, duration) {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${timerNum}</td>
+        <td><input type="time" value="${start}" id="start-${timerNum}"></td>
+        <td><input type="number" value="${duration}" id="duration-${timerNum}" min="1"></td>
+        <td><button onclick="saveTimer(${timerNum})">Save</button></td>
+      `;
+      table.appendChild(row);
+    }
+
+    function saveTimer(num) {
+      const start = document.getElementById(`start-${num}`).value;
+      const duration = parseInt(document.getElementById(`duration-${num}`).value);
+      db.ref("timers/" + num).set({ start, duration });
+      alert(`Timer ${num} updated!`);
+    }
+
+    // Load all timers
+    db.ref("timers").once("value").then(snapshot => {
+      const data = snapshot.val();
+      for (let i = 1; i <= 12; i++) {
+        const timer = data[i] || { start: "08:00", duration: 5 };
+        createRow(i, timer.start, timer.duration);
+      }
+    });
+  </script>
+</body>
+</html>
